@@ -1,6 +1,6 @@
 a = str(input("Введіть значення А: "))
 b = str(input("Введіть значення В: "))
-#c = str(input("Введіть значення C: "))
+c = str(input("Введіть значення C: "))
 
 def hex_to_32(hex_num, base=2**32):
     n = int(hex_num, 16)
@@ -12,31 +12,29 @@ def hex_to_32(hex_num, base=2**32):
 
 a = hex_to_32(a)
 b = hex_to_32(b)
-#c = hex_to_32(c)
+c = hex_to_32(c)
 
 class LongNumOperations():
     def long_add(self, num1, num2, base=2**32):
         n = max(len(num1), len(num2))
-        k = abs(len(num1) - len(num2))
         if len(num1) > len(num2):
-            num2 = num2 + [0] * k
+            num2 = num2 + [0] * abs(len(num1) - len(num2))
         if len(num1) < len(num2):
-            num1 = num1 + [0] * k
+            num1 = num1 + [0] * abs(len(num1) - len(num2))
         C = []
         carry = 0
         for i in range(n):
             temp = num1[i] + num2[i] + carry
             C.append(temp % base)
             carry = temp // base
-        return C
+        return C + [carry]
 
     def long_sub(self, num1, num2, base=2**32):
         n = max(len(num1), len(num2))
-        k = abs(len(num1) - len(num2))
         if len(num1) > len(num2):
-            num2 = num2 + [0] * k
+            num2 = num2 + [0] * abs(len(num1) - len(num2))
         if len(num1) < len(num2):
-            num1 = num1 + [0] * k
+            num1 = num1 + [0] * abs(len(num1) - len(num2))
         C = []
         borrow = 0
         for i in range(n):
@@ -70,11 +68,10 @@ class LongNumOperations():
 
     def long_cmp(self, num1, num2):
         n = max(len(num1), len(num2))
-        k = abs(len(num1) - len(num2))
         if len(num1) > len(num2):
-            num2 = num2 + [0] * k
+            num2 = num2 + [0] * abs(len(num1) - len(num2))
         if len(num1) < len(num2):
-            num1 = num1 + [0] * k
+            num1 = num1 + [0] * abs(len(num1) - len(num2))
         i = n - 1
         while num1[i] == num2[i] and i > -1:
             i = i - 1
@@ -86,26 +83,38 @@ class LongNumOperations():
             else:
                 return -1
 
-    """def long_div_mod(self, num1, num2):
-        k = len(num2)
+    def long_div_mod(self, num1, num2):
+        num1 = self.from32_to10(num1)
+        num2 = self.from32_to10(num2)
+        if num2 == 0:
+            return print("Ділити на нуль не можна!")
+        k = num2.bit_length()
         R = num1
-        Q = []
-        if self.long_cmp(R, num2) >= 0:
-            t = len(R)
-            C = [0] * (t - k) + num2
-            if self.long_cmp(R, C) == -1:
-                t = t - 1
-                C = [0] * (t - k) + num2
-            R = self.long_sub(R, C)
-            Q = self.long_add(Q, self.from10_to32(2**(t - k)))
+        t = R.bit_length()
+        Q = 0
+        shift = t - k
+        while shift >= 0:
+            C = num2 << shift
+            if R >= C:
+                R = R - C
+                Q = Q | (1 << shift)
+            shift = shift - 1
+        Q = self.from10_to32(Q)
+        R = self.from10_to32(R)
         return Q
 
-    def from10_to32(self, n, base=2 ** 32):
+    def from10_to32(self, n, base=2**32):
         blocks = []
         while n > 0:
             blocks.append(n % base)
             n = n // base
-        return blocks"""
+        return blocks
+
+    def from32_to10(self, num_32, base=2**32):
+        decimal_value = 0
+        for i, block in enumerate(num_32):
+            decimal_value = decimal_value + block * (base ** i)
+        return decimal_value
 
 def from32_to16(num_32, base=2**32):
     decimal_value = 0
@@ -117,7 +126,7 @@ C = LongNumOperations()
 print('Сума чисел А + В дорівнює:', from32_to16(C.long_add(a, b)))
 print('Різниця чисел А - В дорівнює:', from32_to16(C.long_sub(a, b)))
 print('Добуток чисел А х В дорівнює:', from32_to16(C.long_mul(a, b)))
-#print('Ділення чисел А / В дорівнює:', from32_to16(C.long_div_mod(a, c)))
+print('Ділення чисел А / В дорівнює:', from32_to16(C.long_div_mod(a, c)))
 
 #ПЕРЕВІРКА
 #print('(a + b) * c =', from32_to16(C.long_mul(C.long_add(a, b), c)))
@@ -129,9 +138,11 @@ print('Добуток чисел А х В дорівнює:', from32_to16(C.long
 y1 = [1.9*10**(-5), 1.45*10**(-5), 1.4*10**(-5), 1.5*10**(-5), 1.6*10**(-5), 1.9*10**(-5), 2*10**(-5), 2.6*10**(-5), 3.4*10**(-5)]
 y2 = [7.3*10**(-6), 6.7*10**(-6), 7*10**(-6), 7*10**(-6), 8.2*10**(-6), 9.2*10**(-6), 1.1*10**(-5), 1.9*10**(-5), 2.1*10**(-5)]
 y3 = [1.6*10**(-5), 1.42*10**(-5), 1.4*10**(-5), 2.2*10**(-5), 2.8*10**(-5), 5.5*10**(-5), 1.5*10**(-4), 4.7*10**(-4), 1.7*10**(-3)]
+y4 = [1.4*10**(-5), 1.9*10**(-5), 2.2*10**(-5), 2.8*10**(-5), 3.3*10**(-5), 5.1*10**(-5), 8.4*10**(-5), 1.6*10**(-4), 3.4*10**(-4)]
 plt.plot(X, y1, color='red', label='Операція додавання')
 plt.plot(X, y2, color='orange', label='Операція віднімання')
 plt.plot(X, y3, color='green', label='Операція множення')
+plt.plot(X, y4, color='blue', label='Операція ділення')
 plt.title("Час виконання операцій багаторозрядної арифметики")
 plt.xlabel('Довжина чисел')
 plt.ylabel("Час виконання операцій")
